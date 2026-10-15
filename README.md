@@ -5,10 +5,12 @@ A private admin app for the Humor Project Supabase database. It reads profiles a
 ## Setup
 
 1. Run `npm ci`.
-2. Copy `.env.example` to `.env.local` and set the **Humor Project** Supabase URL and publishable key. Do not add a secret or service role key to this app.
+2. Copy `.env.example` to `.env.local` and set the **Humor Project** Supabase URL and publishable key. For AI publishing in the protected Player Mode, also set `GEMINI_API_KEY`. Do not add a Supabase secret or service role key to this app.
 3. Apply [`supabase/admin_setup.sql`](supabase/admin_setup.sql) in that project's Supabase SQL Editor. Its prerequisite is the existing `profiles`, `generations`, `captions`, and `caption_votes` schema.
 4. Add `http://localhost:3000/auth/callback` and your deployed `https://<admin-domain>/auth/callback` to Supabase Auth allowed redirect URLs. Google OAuth must already be enabled for that Supabase project.
 5. Run `npm run dev` and sign in with Google.
+
+For Vercel, add the same two `NEXT_PUBLIC_SUPABASE_*` variables as Config values in Project Settings → Environment Variables, and add `GEMINI_API_KEY` as a server-only Secret if you want AI publishing in Player Mode. Redeploy after changing variables. The main Humor Project website and this admin website use the same Supabase project and the same Google account, but each domain has its own sign-in session.
 
 Every `/admin` route rechecks the Google user and `profiles.is_superadmin`. Every server action does the same. RLS also checks the database flag on every data query or mutation; the app has no service role key. The SQL prevents users from editing their own admin flag through an existing profile update policy.
 
@@ -43,6 +45,8 @@ Check that exactly one row is returned. Refresh the admin app and sign in again.
 - People: read and search profiles with pagination.
 - AI media: create, read, update, and delete published captions with their prompt, topic, provider, and owner profile. Database functions make multi table changes atomic.
 - Reactions: read and filter individual upvotes and downvotes with pagination.
+- Player Mode: the superadmin can browse the regular caption feed, save private drafts, publish AI captions with the same RPC as regular users, and upvote/downvote captions other than their own.
+- My Profile: update the same name and avatar used by the regular website. The protected admin flag is not editable here.
 
 The app reads live data; it contains no sample records. Deleting media also deletes its generation and associated votes through existing foreign key cascades.
 
