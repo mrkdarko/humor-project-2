@@ -5,9 +5,10 @@ import { GoogleButton } from "./google-button";
 export default async function LoginPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (user?.app_metadata?.provider === "google") {
+  if (user) {
     const { data } = await supabase.from("profiles").select("is_superadmin").eq("id", user.id).maybeSingle();
-    if (data?.is_superadmin) redirect("/admin");
+    if (user.app_metadata?.provider === "google" && data?.is_superadmin) redirect("/admin");
+    redirect("/denied");
   }
   return <main className="login-shell">
     <div className="cloud cloud-1" aria-hidden="true" style={{ top: "15%" }} />
