@@ -49,18 +49,6 @@ grant insert (user_id, prompt, topic, source, provider, status),
   update (prompt, topic, provider, status, source), delete on public.generations to authenticated;
 grant insert (generation_id, content), update (content), delete on public.captions to authenticated;
 
--- Allow the setup to be rerun if the initial deployment state is uncertain.
-drop policy if exists admin_profiles_read on public.profiles;
-drop policy if exists admin_generations_read on public.generations;
-drop policy if exists admin_generations_insert on public.generations;
-drop policy if exists admin_generations_update on public.generations;
-drop policy if exists admin_generations_delete on public.generations;
-drop policy if exists admin_captions_read on public.captions;
-drop policy if exists admin_captions_insert on public.captions;
-drop policy if exists admin_captions_update on public.captions;
-drop policy if exists admin_captions_delete on public.captions;
-drop policy if exists admin_votes_read on public.caption_votes;
-
 create policy admin_profiles_read on public.profiles for select to authenticated
   using ((select admin_private.is_superadmin()));
 create policy admin_generations_read on public.generations for select to authenticated

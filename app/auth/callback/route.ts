@@ -8,8 +8,7 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) return NextResponse.redirect(new URL("/?error=oauth", request.url));
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.redirect(new URL("/?error=oauth", request.url));
-  if (user.app_metadata?.provider !== "google") return NextResponse.redirect(new URL("/denied", request.url));
+  if (!user || user.app_metadata?.provider !== "google") return NextResponse.redirect(new URL("/", request.url));
   const { data } = await supabase.from("profiles").select("is_superadmin").eq("id", user.id).maybeSingle();
   return NextResponse.redirect(new URL(data?.is_superadmin ? "/admin" : "/denied", request.url));
 }
