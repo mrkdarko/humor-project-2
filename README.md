@@ -1,12 +1,12 @@
 # Humor Project Control Room
 
-A private admin app for the Humor Project Supabase database. It reads profiles and reactions, shows live community statistics, and creates, edits, and deletes AI generated captions. Captions are the media type in the current Humor Project schema (`generations` + `captions`).
+A private admin app for the Humor Project Supabase database. It reads profiles, AI workflow records, and reactions; manages catalog data and images; shows live community statistics; and creates, edits, and deletes AI generated captions. Existing `generations` records are shown as generation requests, and `captions` are the current AI media type.
 
 ## Setup
 
 1. Run `npm ci`.
 2. Copy `.env.example` to `.env.local` and set the **Humor Project** Supabase URL and publishable key. For AI publishing in the protected Player Mode, also set `GEMINI_API_KEY`. Do not add a Supabase secret or service role key to this app.
-3. Apply [`supabase/admin_setup.sql`](supabase/admin_setup.sql) in that project's Supabase SQL Editor. Its prerequisite is the existing `profiles`, `generations`, `captions`, and `caption_votes` schema.
+3. Apply [`supabase/admin_setup.sql`](supabase/admin_setup.sql), then [`supabase/admin_catalog.sql`](supabase/admin_catalog.sql), in that project's Supabase SQL Editor. Their prerequisite is the existing `profiles`, `generations`, `captions`, and `caption_votes` schema. The catalog script creates the new tables, row policies, and private `admin-images` bucket.
 4. Add `http://localhost:3000/auth/callback` and your deployed `https://<admin-domain>/auth/callback` to Supabase Auth allowed redirect URLs. Google OAuth must already be enabled for that Supabase project.
 5. Run `npm run dev` and sign in with Google.
 
@@ -47,11 +47,16 @@ Check that exactly one row is returned. Refresh the admin app and sign in again.
 - Reactions: read and filter individual upvotes and downvotes with pagination.
 - Player Mode: the superadmin can browse the regular caption feed, save private drafts, publish AI captions with the same RPC as regular users, and upvote/downvote captions other than their own.
 - My Profile: update the same name and avatar used by the regular website. The protected admin flag is not editable here.
+- AI workflow: read prompt chains and steps, read and update chain mix, read generation requests and LLM responses.
+- Catalog: create, read, update, and delete terms, AI generation examples, LLM providers, LLM models, allowed signup domains, and whitelisted email addresses.
+- Images: upload, view, replace, rename, and delete images in a private storage bucket. The admin app uses signed preview URLs.
 
 The app reads live data; it contains no sample records. Deleting media also deletes its generation and associated votes through existing foreign key cascades.
+
+The signup domain and email tables are management records. They do not restrict Supabase Auth signups by themselves; connect them to an Auth hook or your signup policy before relying on them as an allowlist.
 
 ## Verification
 
 Run `npm run lint` and `npm run build`. After applying the SQL, test with two Google accounts: one promoted and one ordinary member. The member must get `/denied` and must be unable to call the admin RPCs directly; the promoted account must be able to read each section and create, edit, and delete a test caption. Revoke the flag and confirm the former admin loses access on the next request.
 
-The Supabase connector available in this task is connected to a **different** project from the Humor Project URL found in the adjacent app. For that reason, the SQL has been prepared here but has not been applied to the Humor Project database, and the first administrator has not been promoted.
+The `admin_catalog` migration was applied to Humor Project project `afcxmphlvlvanwtsrpaz` on 2026-10-25. It created 11 RLS-protected tables and the private image bucket. The new catalog tables start empty; generation requests continue to read existing `generations` rows.
