@@ -1,12 +1,12 @@
 # Humor Project Control Room
 
-A private admin app for the Humor Project Supabase database. It reads profiles, AI workflow records, and reactions; manages catalog data and images; shows live community statistics; and creates, edits, and deletes AI generated captions. Existing `generations` records are shown as generation requests, and `captions` are the current AI media type.
+A private admin app for the Humor Project Supabase database. It reads profiles, AI workflow records, and reactions; manages catalog data and images; shows live community statistics; and creates, edits, and deletes AI generated captions. Text and photo memes are both published captions; photo memes have a `generations.image_path`.
 
 ## Setup
 
 1. Run `npm ci`.
 2. Copy `.env.example` to `.env.local` and set the **Humor Project** Supabase URL and publishable key. For AI publishing in the protected Player Mode, also set `GEMINI_API_KEY`. Do not add a Supabase secret or service role key to this app.
-3. Apply [`supabase/admin_setup.sql`](supabase/admin_setup.sql), then [`supabase/admin_catalog.sql`](supabase/admin_catalog.sql), in that project's Supabase SQL Editor. Their prerequisite is the existing `profiles`, `generations`, `captions`, and `caption_votes` schema. The catalog script creates the new tables, row policies, and private `admin-images` bucket.
+3. Apply [`supabase/admin_setup.sql`](supabase/admin_setup.sql), [`supabase/admin_catalog.sql`](supabase/admin_catalog.sql), then [`supabase/admin_photo_stats.sql`](supabase/admin_photo_stats.sql) in that project's Supabase SQL Editor. Their prerequisite is the existing `profiles`, `generations`, `captions`, and `caption_votes` schema; photo statistics also require `generations.image_path`. The catalog script creates the new tables, row policies, and private `admin-images` bucket.
 4. Add `http://localhost:3000/auth/callback` and your deployed `https://<admin-domain>/auth/callback` to Supabase Auth allowed redirect URLs. Google OAuth must already be enabled for that Supabase project.
 5. Run `npm run dev` and sign in with Google.
 
@@ -41,9 +41,9 @@ Check that exactly one row is returned. Refresh the admin app and sign in again.
 
 ## Features
 
-- Overview: member count, published media, queued generations, positive reaction ratio, seven day publishing trend, topic mix, and top rated media.
+- Overview: member count, separate text and photo meme counts, queued generations, reaction totals, photo reactions, seven day publishing trend by format, topic mix, recent photo previews, and top rated media.
 - People: read and search profiles with pagination.
-- AI media: create, read, update, and delete published captions with their prompt, topic, provider, and owner profile. Database functions make multi table changes atomic.
+- AI media: create, read, update, and delete published captions with their prompt, topic, provider, and owner profile. Existing photo memes are labeled in the archive and their images appear on the detail page. Database functions make multi table changes atomic.
 - Reactions: read and filter individual upvotes and downvotes with pagination.
 - Player Mode: the superadmin can browse the regular caption feed, save private drafts, publish AI captions with the same RPC as regular users, and upvote/downvote captions other than their own.
 - My Profile: update the same name and avatar used by the regular website. The protected admin flag is not editable here.
@@ -60,3 +60,5 @@ The signup domain and email tables are management records. They do not restrict 
 Run `npm run lint` and `npm run build`. After applying the SQL, test with two Google accounts: one promoted and one ordinary member. The member must get `/denied` and must be unable to call the admin RPCs directly; the promoted account must be able to read each section and create, edit, and delete a test caption. Revoke the flag and confirm the former admin loses access on the next request.
 
 The `admin_catalog` migration was applied to Humor Project project `afcxmphlvlvanwtsrpaz` on 2026-10-25. It created 11 RLS-protected tables and the private image bucket. The new catalog tables start empty; generation requests continue to read existing `generations` rows.
+
+The `admin_photo_stats` migration was applied to the same project on 2026-10-26. It only updates the existing, superadmin-checked `admin_overview` function.
